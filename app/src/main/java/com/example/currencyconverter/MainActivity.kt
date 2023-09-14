@@ -19,11 +19,31 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-
         getCurrencies()
+        binding.btConvert.setOnClickListener { convertMoney() }
     }
 
+    fun convertMoney() {
+        val retrofitClient = NetworkUtils.getRetrofitInstance("https://cdn.jsdelivr.net/")
+        val endpoint = retrofitClient.create(Endpoint::class.java)
 
+        endpoint.getCurrencyRate(binding.spFrom.selectedItem.toString(), binding.spTo.selectedItem.toString()).enqueue(object :
+            retrofit2.Callback<JsonObject>{
+            override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
+                var data = response.body()?.entrySet()?.find { it.key == binding.spTo.selectedItem.toString() }
+                val rate: Double = data?.value.toString().toDouble()
+                val conversion = binding.etValueFrom.text.toString().toDouble() * rate
+
+                binding.tvResult.text = conversion.toString()
+
+            }
+
+            override fun onFailure(call: Call<JsonObject>, t: Throwable) {
+               println("Error")
+            }
+
+        })
+    }
 
     fun getCurrencies() {
         val retrofitClient = NetworkUtils.getRetrofitInstance("https://cdn.jsdelivr.net/")
