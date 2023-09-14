@@ -3,6 +3,7 @@ package com.example.currencyconverter
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.ArrayAdapter
+import android.widget.Toast
 import com.example.currencyconverter.api.Endpoint
 import com.example.currencyconverter.databinding.ActivityMainBinding
 import com.example.currencyconverter.util.NetworkUtils
@@ -20,17 +21,26 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         getCurrencies()
-        binding.btConvert.setOnClickListener { convertMoney() }
+        binding.btConvert.setOnClickListener {
+            if (binding.etValueFrom.text.toString() == "") {
+                Toast.makeText(this, "Please enter a value to convert.", Toast.LENGTH_SHORT)
+                    .show()
+            }else{convertMoney()}
+        }
     }
 
     fun convertMoney() {
         val retrofitClient = NetworkUtils.getRetrofitInstance("https://cdn.jsdelivr.net/")
         val endpoint = retrofitClient.create(Endpoint::class.java)
 
-        endpoint.getCurrencyRate(binding.spFrom.selectedItem.toString(), binding.spTo.selectedItem.toString()).enqueue(object :
-            retrofit2.Callback<JsonObject>{
+        endpoint.getCurrencyRate(
+            binding.spFrom.selectedItem.toString(),
+            binding.spTo.selectedItem.toString()
+        ).enqueue(object :
+            retrofit2.Callback<JsonObject> {
             override fun onResponse(call: Call<JsonObject>, response: Response<JsonObject>) {
-                var data = response.body()?.entrySet()?.find { it.key == binding.spTo.selectedItem.toString() }
+                var data = response.body()?.entrySet()
+                    ?.find { it.key == binding.spTo.selectedItem.toString() }
                 val rate: Double = data?.value.toString().toDouble()
                 val conversion = binding.etValueFrom.text.toString().toDouble() * rate
 
@@ -39,7 +49,7 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<JsonObject>, t: Throwable) {
-               println("Error")
+                println("Error")
             }
 
         })
@@ -62,7 +72,8 @@ class MainActivity : AppCompatActivity() {
                 val posBRL = data.indexOf("brl")
                 val posUSD = data.indexOf("usd")
 
-                val adapter = ArrayAdapter(baseContext, android.R.layout.simple_spinner_dropdown_item, data)
+                val adapter =
+                    ArrayAdapter(baseContext, android.R.layout.simple_spinner_dropdown_item, data)
                 binding.spFrom.adapter = adapter
                 binding.spTo.adapter = adapter
 
