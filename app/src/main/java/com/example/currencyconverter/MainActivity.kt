@@ -2,6 +2,7 @@ package com.example.currencyconverter
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.ArrayAdapter
 import com.example.currencyconverter.api.Endpoint
 import com.example.currencyconverter.databinding.ActivityMainBinding
 import com.example.currencyconverter.util.NetworkUtils
@@ -22,6 +23,8 @@ class MainActivity : AppCompatActivity() {
         getCurrencies()
     }
 
+
+
     fun getCurrencies() {
         val retrofitClient = NetworkUtils.getRetrofitInstance("https://cdn.jsdelivr.net/")
         val endpoint = retrofitClient.create(Endpoint::class.java)
@@ -35,7 +38,16 @@ class MainActivity : AppCompatActivity() {
                 response.body()?.keySet()?.iterator()?.forEach {
                     data.add(it)
                 }
-                println(data.count())
+
+                val posBRL = data.indexOf("brl")
+                val posUSD = data.indexOf("usd")
+
+                val adapter = ArrayAdapter(baseContext, android.R.layout.simple_spinner_dropdown_item, data)
+                binding.spFrom.adapter = adapter
+                binding.spTo.adapter = adapter
+
+                binding.spFrom.setSelection(posBRL)
+                binding.spTo.setSelection(posUSD)
             }
 
             override fun onFailure(call: Call<JsonObject>, t: Throwable) {
